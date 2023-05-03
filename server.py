@@ -3,6 +3,7 @@
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
+# from twisted.websocket import WebSocketSite, WebSocketProtocol, WebSocketServerFactory
 import sqlite3
 
 # Conectare la baza de date
@@ -75,6 +76,7 @@ class AddStudentPage(resource.Resource):
         conn.close()
         html = b"<html><body>"
         html += b"<h1>Student adaugat</h1>"
+        html += b'<br><a href="/studenti"><button>Inapoi la studenti</button></a></br>'
         html += b"</body></html>"
         return html
 
@@ -99,16 +101,34 @@ class DeleteStudentPage(resource.Resource):
         conn.close()
         html = b"<html><body>"
         html += b"<h1>Student sters</h1>"
+        html += b'<br><a href="/studenti"><button>Inapoi la studenti</button></a></br>'
         html += b"</body></html>"
         return html
 
+# class MyWebSocketProtocol(WebSocketProtocol):
+#     def onOpen(self):
+#         print("WebSocket connection open")
+#
+#     def onMessage(self, message, isBinary):
+#         print("Received WebSocket message:", message)
+#
+#     def onClose(self, wasClean, code, reason):
+#         print("WebSocket connection closed")
+#
+# class WebSocketPage(resource.Resource):
+#     isLeaf = True
+#
+#     def render_GET(self, request):
+#         request.setHeader(b"content-type", b"text/plain")
+#         return b"WebSocket connection established"
 
 root = resource.Resource()
 root.putChild(b"", HomePage())
 root.putChild(b"studenti", StudentiPage())
 root.putChild(b"deleteStudent", DeleteStudentPage())
 root.putChild(b"addStudent", AddStudentPage())
-
-endpoints.serverFromString(reactor, "tcp:8888").listen(server.Site(root))
-print("Serverul ruleaza...")
+#root.putChild(b"websocket", WebSocketSite(WebSocketServerFactory("ws://localhost:8888", debug=False)))
+port = "8888"
+endpoints.serverFromString(reactor, f"tcp:{port}").listen(server.Site(root))
+print(f"Serverul ruleaza pe localhost:{port}...")
 reactor.run()
