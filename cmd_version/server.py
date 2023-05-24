@@ -18,9 +18,13 @@ clients = []
 client_data = {}
 
 def notify_clients(key):
+    conn = sqlite3.connect('reteleProiect.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM STUDENTI WHERE ID = ?", (key,))
+    updated_student = c.fetchone()
     for client in clients:
         if key in client_data[client]:
-            client.send(pickle.dumps((key, 'MODIFIED')))
+            client.send(pickle.dumps(('MODIFIED', updated_student)))
 
 def handle_client(client):
     # Conectarea la baza de date
@@ -40,6 +44,14 @@ def handle_client(client):
             c.execute("SELECT * FROM STUDENTI")
             result = c.fetchall()
             client.send(pickle.dumps(result))
+
+        elif isinstance(request, tuple) and request[0] == 'SELECTARE':
+            c.execute("SELECT * FROM STUDENTI WHERE ID = ?", (request[1],))
+            if c.fetchone() is not None:
+                client_data[client].add(request[1])
+                client.send(pickle.dumps('SELECTAT'))
+            else:
+                client.send(pickle.dumps('NU_EXISTA'))
 
         # Daca clientul adauga un student
         elif isinstance(request, tuple) and request[0] == 'ADAUGARE':
@@ -73,7 +85,7 @@ def handle_client(client):
             if c.fetchone() is not None:
                 c.execute("DELETE FROM STUDENTI WHERE ID = ?", (request[1],))
                 conn.commit()
-                notify_clients(request[1])
+                notify_clients(request[1],)
                 c.execute("SELECT * FROM STUDENTI WHERE ID = ?", (request[1],))
                 if c.fetchone() is None:
                     client.send(pickle.dumps('STERGERE'))
