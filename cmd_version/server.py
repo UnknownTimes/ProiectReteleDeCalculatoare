@@ -55,7 +55,7 @@ def handle_client(client):
 
         # Daca clientul adauga un student
         elif isinstance(request, tuple) and request[0] == 'ADAUGARE':
-            c.execute("SELECT * FROM STUDENTI WHERE ID = ? AND Nume = ?", (request[1], request[2]))
+            c.execute("SELECT * FROM STUDENTI WHERE ID = ? AND Nume = ?", (request[1],))
             if c.fetchone() is not None:
                 client.send(pickle.dumps('EXISTA'))
             else:
